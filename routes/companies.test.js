@@ -123,9 +123,12 @@ describe("GET /companies", function () {
     );
     const resp2 = await request(app).get("/companies?name=C1&maxEmployees=1");
     const resp3 = await request(app).get("/companies?minEmployees=100");
+    // resp4 tests case sensitive queries
+    const resp4 = await request(app).get("/companies?name=c1");
     expect(resp1.body.companies[0].name).toEqual("C1");
     expect(resp2.body.companies[0].name).toEqual("C1");
     expect(resp3.body.companies.length).toEqual(0);
+    expect(resp4.body.companies[0].name).toEqual("C1");
   });
 });
 

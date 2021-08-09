@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForPartialQuery } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -45,7 +45,7 @@ class Company {
    * */
 
   static async findAll(query) {
-    let whereCols, whereVals, whereStatement;
+    let whereStatement, whereClause, whereCols, values;
     const queryIncluded = query && Object.keys(query).length !== 0;
     const minGreaterThanMax =
       query &&
@@ -55,14 +55,11 @@ class Company {
     if (minGreaterThanMax)
       throw new BadRequestError("minEmployees greater than maxEmployees");
     if (queryIncluded) {
-      let sql = sqlForPartialUpdate(query, {
-        numEmployees: "num_employees",
+      whereClause = sqlForPartialQuery(query, {
         logoUrl: "logo_url",
       });
-      whereCols = sql.setCols;
-      whereCols = whereCols.replace(/\"minEmployees\"\=/g, '"num_employees">=');
-      whereCols = whereCols.replace(/\"maxEmployees\"\=/g, '"num_employees"<=');
-      whereCols = whereCols.replace(",", " AND");
+      whereCols = whereClause.whereCols;
+      values = whereClause.values;
       whereStatement = `WHERE 1=1 AND `;
     }
     const sqlQuery = `
@@ -79,7 +76,7 @@ class Company {
     debugger;
     const companiesRes = await db.query(
       sqlQuery,
-      queryIncluded ? [...whereVals] : null
+      queryIncluded ? [...values] : null
     );
     return companiesRes.rows;
   }

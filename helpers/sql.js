@@ -23,4 +23,27 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-module.exports = { sqlForPartialUpdate };
+function sqlForPartialQuery(dataToQuery, jsToSql) {
+  const keys = Object.keys(dataToQuery);
+  if (keys.length === 0) throw new BadRequestError("No data");
+
+  // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
+  const cols = keys.map((colName, idx) => {
+    if (colName === "minEmployees") {
+      return `"num_employees">=$${idx + 1}`;
+    } else if (colName === "maxEmployees") {
+      return `"num_employees"<=$${idx + 1}`;
+    } else {
+      debugger;
+      dataToQuery[colName] = `%${Object.values(dataToQuery)[idx]}%`;
+      return `lower(${jsToSql[colName] || colName}) LIKE lower($${idx + 1})`;
+    }
+  });
+
+  return {
+    whereCols: cols.join(" AND "),
+    values: Object.values(dataToQuery),
+  };
+}
+
+module.exports = { sqlForPartialUpdate, sqlForPartialQuery };
