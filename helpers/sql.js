@@ -33,8 +33,15 @@ function sqlForPartialQuery(dataToQuery, jsToSql) {
       return `"num_employees">=$${idx + 1}`;
     } else if (colName === "maxEmployees") {
       return `"num_employees"<=$${idx + 1}`;
+    } else if (colName === "minSalary") {
+      return `"salary"<=$${idx + 1}`;
+    } else if (colName === "maxSalary") {
+      return `"salary"<=$${idx + 1}`;
+    } else if (colName === "minEquity") {
+      return `"equity"<=$${idx + 1}`;
+    } else if (colName === "maxEquity") {
+      return `"equity"<=$${idx + 1}`;
     } else {
-      debugger;
       dataToQuery[colName] = `%${Object.values(dataToQuery)[idx]}%`;
       return `lower(${jsToSql[colName] || colName}) LIKE lower($${idx + 1})`;
     }

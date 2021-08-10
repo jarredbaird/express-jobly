@@ -73,7 +73,6 @@ class Company {
       companies
     ${queryIncluded ? whereStatement + whereCols : ""}
     ORDER BY name`;
-    debugger;
     const companiesRes = await db.query(
       sqlQuery,
       queryIncluded ? [...values] : null
@@ -91,19 +90,30 @@ class Company {
 
   static async get(handle) {
     const companyRes = await db.query(
-      `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           WHERE handle = $1`,
+      `SELECT c.handle,
+                  c.name,
+                  c.description,
+                  c.num_employees AS "numEmployees",
+                  c.logo_url AS "logoUrl",
+                  ARRAY_AGG ('{"id": "' || j.id || 
+                             '", "title": "' || j.title || 
+                             '", "salary": "' || j.salary || 
+                             '", "equity": "' || j.equity || 
+                             '", "companyHandle": "' || j.company_handle ||
+                            '" }') jobs
+           FROM companies c
+           left join jobs j
+           on c.handle = j.company_handle
+           WHERE c.handle = $1
+           group by
+             c.handle, c.name, c.description, c.num_employees, c.logo_url`,
       [handle]
     );
 
     const company = companyRes.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+    company.jobs = company.jobs.map((job) => JSON.parse(job));
 
     return company;
   }
