@@ -12,6 +12,7 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  trackJobIds,
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -140,6 +141,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: expect.any(Array),
     });
   });
 
@@ -209,13 +211,23 @@ describe("update", function () {
   });
 });
 
+/************************************** apply */
+describe("apply", function () {
+  test("works", async () => {
+    await User.apply("u1", trackJobIds[0]);
+    const res = await db.query(
+      "SELECT * FROM applications WHERE username='u1'"
+    );
+    expect(res.rows[0].job_id).toEqual(trackJobIds[0]);
+  });
+});
+
 /************************************** remove */
 
 describe("remove", function () {
   test("works", async function () {
     await User.remove("u1");
-    const res = await db.query(
-        "SELECT * FROM users WHERE username='u1'");
+    const res = await db.query("SELECT * FROM users WHERE username='u1'");
     expect(res.rows.length).toEqual(0);
   });
 

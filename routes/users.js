@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 
 const express = require("express");
 const { ensureIsAdmin, ensureIsUserOrAdmin } = require("../middleware/auth");
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, NotFoundError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
@@ -52,8 +52,11 @@ router.post(
   async (req, res, next) => {
     try {
       const application = await User.apply(req.params.username, req.params.id);
-      return res.status(201).json(application);
+      return res.status(201).json({ applied: application.job_id });
     } catch (err) {
+      if (err && err.code === "23503") {
+        err = new NotFoundError("jobId or username not found");
+      }
       return next(err);
     }
   }
